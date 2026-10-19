@@ -1,0 +1,147 @@
+// Le modèle de données du forum.
+//
+// Les commentaires marqués « CHOIX : » signalent une décision prise pendant le
+// développement, à valider avec le client : `grep -rn "CHOIX" api web` les liste.
+
+// CHOIX : SQLite, comme dans les TPs. Un fichier dans un volume Docker suffit
+// pour 300 élèves et 30 entreprises, et `docker compose up` n'a pas de serveur
+// de base à attendre. Passer à PostgreSQL ne changerait que ce bloc et l'adapter.
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+// Trois rôles, et pas d'administrateur à part : l'équipe du forum, c'est l'admin
+// (réponse 2 de Léo).
+//   STUDENT    s'inscrit seul, consulte le catalogue, réserve des créneaux
+//   RECRUITER  compte créé par l'équipe le matin du forum, lié à une entreprise (réponse 6)
+//   STAFF      l'équipe du forum : saisit les entreprises et les offres, suit les stands
+//
+// CHOIX : une seule table User pour les trois rôles, plutôt qu'une table par
+// rôle. Les champs propres à un rôle (year, cv, companyId) sont facultatifs.
+// SQLite n'a pas d'enum : le rôle est une chaîne, restreinte dans le code
+// (src/auth/roles.ts).
+model User {
+  id           String  @id @default(uuid())
+  // L'identifiant de connexion, toujours stocké en minuscules.
+  email        String  @unique
+  name         String
+  // Jamais le mot de passe : un hash salé (src/auth/password.ts).
+  passwordHash String
+  role         String
+  // Élèves seulement : 1, 2 ou 3. Les 2A et 3A réservent avant les 1A (réponse 7).
+  year         Int?
+
+  // Élèves seulement : le CV, en PDF, montré aux seules entreprises réservées.
+  // CHOIX : le fichier est stocké dans la base (Bytes), pas sur le disque. Il
+  // vit dans le même volume Docker et se sauvegarde avec elle. 2 Mo au plus
+  // (src/bookings/cv.service.ts) : 300 CV font moins de 600 Mo.
+  cv           Bytes?
+  cvFilename   String?
+
+  // Recruteurs seulement : l'entreprise de leur stand.
+  company      Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId    String?
+
+  bookings     Booking[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([companyId])
+}
+
+model Company {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String  @default("")
+  // Où est le stand dans le gymnase, ex. « B4 ».
+  stand       String?
+  website     String?
+  // Un ou deux recruteurs par stand (réponse 7).
+  // CHOIX : c'est aussi la capacité de chaque créneau : deux recruteurs
+  // reçoivent deux élèves en même temps.
+  recruiterCount Int @default(1)
+
+  offers      Offer[]
+  slots       Slot[]
+  recruiters  User[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Une offre de stage, saisie par l'équipe à partir du mail de l'entreprise
+// (réponse 6 : « Leurs offres, c'est moi qui les saisis »).
+model Offer {
+  id          String  @id @default(uuid())
+  title       String
+  description String  @default("")
+  // CHOIX : du texte libre, recopié de l'offre (« 6 mois », « 2 à 3 mois »),
+  // plutôt qu'un nombre de mois : les offres reçues par mail ne sont pas
+  // normalisées, et Léo dit que la durée « est écrite dans l'offre ».
+  duration    String
+  location    String?
+
+  company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId   String
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([companyId])
+}
+
+// Un créneau de rendez-vous sur un stand.
+// CHOIX : les créneaux existent en base, générés à la création de l'entreprise
+// (src/companies/companies.service.ts), plutôt que calculés à la volée. Une
+// réservation pointe alors vers une ligne précise, et la base garantit qu'un
+// stand n'a pas deux créneaux à la même heure.
+model Slot {
+  id        String   @id @default(uuid())
+  startsAt  DateTime
+  endsAt    DateTime
+  // Autant d'élèves en même temps que de recruteurs sur le stand.
+  capacity  Int      @default(1)
+
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+
+  bookings  Booking[]
+
+  @@unique([companyId, startsAt])
+  @@index([startsAt])
+}
+
+model Booking {
+  id        String   @id @default(uuid())
+
+  slot      Slot     @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  slotId    String
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String
+  // CHOIX : l'entreprise est recopiée du créneau, ce qui permet la contrainte
+  // unique ci-dessous : un élève, un seul rendez-vous par entreprise. Même deux
+  // clics simultanés ne passent pas, c'est la base qui tranche.
+  companyId String
+
+  createdAt DateTime @default(now())
+
+  @@unique([studentId, companyId])
+  @@index([slotId])
+}
+
+// Les réglages du forum : une seule ligne, d'id 1.
+model Settings {
+  id                Int     @id @default(1)
+  // CHOIX : l'ouverture aux 1A est un interrupteur que l'équipe actionne,
+  // plutôt qu'une date fixée à l'avance. Léo n'a pas donné de date, et
+  // l'équipe peut ouvrir quand les 2A et 3A ont eu le temps de réserver.
+  openToFirstYears  Boolean @default(false)
+}
