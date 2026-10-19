@@ -1,0 +1,51 @@
+# Le forum en une commande, depuis la racine :
+#   docker compose up --build
+# Front : http://localhost:8080   API : http://localhost:3000/docs
+services:
+  api:
+    build: ./api
+    ports:
+      - "3000:3000"
+    environment:
+      # Hors de l'image, jamais dedans. À changer dans un fichier .env à la racine.
+      # CHOIX : des valeurs par défaut pour tout, pour que `docker compose up`
+      # marche sur une machine neuve sans rien configurer (exigence du socle).
+      # Pour le vrai forum : un JWT_SECRET et un STAFF_PASSWORD à soi, SEED_DEMO=false.
+      # CHOIX : des valeurs par défaut pour tout, pour que `docker compose up`
+      # marche sur une machine neuve sans rien configurer (exigence du socle).
+      # Pour le vrai forum : un JWT_SECRET et un STAFF_PASSWORD à soi, SEED_DEMO=false.
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me-in-production}
+      DATABASE_URL: file:/app/db/forum.db
+      PORT: "3000"
+      WEB_ORIGIN: http://localhost:8080
+      STAFF_EMAIL: ${STAFF_EMAIL:-equipe@forum.castelmont.fr}
+      STAFF_PASSWORD: ${STAFF_PASSWORD:-forum2026}
+      SEED_DEMO: ${SEED_DEMO:-true}
+      FORUM_DATE: ${FORUM_DATE:-2026-11-19}
+      SLOT_MINUTES: ${SLOT_MINUTES:-20}
+      MAX_BOOKINGS_PER_STUDENT: ${MAX_BOOKINGS_PER_STUDENT:-5}
+    # CHOIX : la base SQLite est un fichier dans ce volume, pas un service à part
+    # (voir api/prisma/schema.prisma). Elle survit à `docker compose down`.
+    volumes:
+      - db:/app/db
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+
+  web:
+    build:
+      context: ./web
+      args:
+        # L'adresse de l'API vue par le navigateur, écrite dans le JavaScript au build.
+        VITE_API_URL: http://localhost:3000
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy # le front attend que GET /health réponde
+
+volumes:
+  db:

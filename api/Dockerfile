@@ -27,6 +27,9 @@ ENV NODE_ENV=production
 # It keeps the dev dependencies, because `prisma` and `tsx` run at startup.
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+# The seed runs with tsx and imports the sources: the password hash, the slots,
+# and the Prisma client generated during `npm ci`.
+COPY --from=build /app/src ./src
 COPY package.json prisma.config.ts ./
 COPY prisma ./prisma
 
