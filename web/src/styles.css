@@ -436,3 +436,236 @@ a {
   color: var(--muted);
   font-size: 0.85rem;
 }
+
+/* ─── Le forum ──────────────────────────────────────────────────────────── */
+
+.muted {
+  color: var(--muted);
+}
+
+.intro,
+.notice {
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+}
+
+.success {
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 16px 0 24px;
+}
+
+.toolbar .field {
+  flex: 1 1 240px;
+}
+
+.field input,
+.field textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.field.full {
+  grid-column: 1 / -1;
+}
+
+.card-description {
+  margin: 0;
+  color: var(--muted);
+}
+
+.offer-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.places {
+  margin: auto 0 0;
+  font-weight: 600;
+  color: #067647;
+}
+
+.places.full {
+  color: var(--muted);
+}
+
+.offers {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.offer {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.offer h4,
+.offer p {
+  margin: 0 0 4px;
+}
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.slot.taken {
+  background: var(--bg);
+}
+
+.slot.mine {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.button.small {
+  padding: 4px 10px;
+  font-size: 0.875rem;
+}
+
+.bookings {
+  padding: 0;
+  list-style: none;
+}
+
+.booking {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.booking-time {
+  min-width: 120px;
+  font-weight: 600;
+}
+
+.cv {
+  margin-top: 32px;
+}
+
+.form.inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.checkbox {
+  display: block;
+  margin: 16px 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.table caption {
+  text-align: left;
+  padding: 8px 0;
+  color: var(--muted);
+}
+
+.table th,
+.table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.table tr.alert td {
+  background: var(--danger-soft);
+}
+
+.free-row td {
+  color: var(--muted);
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.tiles > div {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.tiles > div.alert {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.tiles dt {
+  color: var(--muted);
+}
+
+.tiles dd {
+  margin: 4px 0 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.tiles dd.muted {
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.danger-zone {
+  margin-top: 40px;
+}
+
+.link-button.danger {
+  color: var(--danger);
+}
+
+@media (max-width: 640px) {
+  .table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+li.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
