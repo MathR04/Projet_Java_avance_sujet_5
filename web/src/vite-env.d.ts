@@ -1,0 +1,6 @@
+/// <reference types="vite/client" />
+
+/** Repris du TP9. The variables of `.env` that the browser can read: only those that start with VITE_. */
+interface ImportMetaEnv {
+  readonly VITE_API_URL?: string;
+}
